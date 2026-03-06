@@ -39,11 +39,8 @@ app.use(notFoundHandler);
 // Global Error Handler (must be last)
 app.use(errorHandler);
 
-const currentFilePath = fileURLToPath(import.meta.url);
-const isDirectRun = process.argv[1] === currentFilePath;
-
-// Start server only for direct runtime (not when imported by tests/tools).
-if (isDirectRun && process.env.NODE_ENV !== 'test') {
+// Start server unless running in test environment (tests import this module directly).
+if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log(`✓ Server running on http://localhost:${PORT}`);
     console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);

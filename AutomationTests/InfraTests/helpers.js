@@ -118,6 +118,30 @@ export function httpGet(url, timeoutMs = 5000) {
   })
 }
 
+/** Make an HTTP POST request with an empty JSON body. */
+export function httpPost(url, timeoutMs = 5000) {
+  return new Promise((resolve, reject) => {
+    const urlObj = new URL(url)
+    const options = {
+      hostname: urlObj.hostname,
+      port: urlObj.port || 80,
+      path: urlObj.pathname,
+      method: 'POST',
+      timeout: timeoutMs,
+      headers: { 'Content-Type': 'application/json', 'Content-Length': 2 },
+    }
+    const req = http.request(options, (res) => {
+      let body = ''
+      res.on('data', chunk => { body += chunk })
+      res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, body }))
+    })
+    req.on('error', reject)
+    req.on('timeout', () => { req.destroy(); reject(new Error(`HTTP POST ${url} timed out after ${timeoutMs}ms`)) })
+    req.write('{}')
+    req.end()
+  })
+}
+
 /** Make an HTTP OPTIONS (CORS preflight) request. */
 export function httpOptions(url, origin, timeoutMs = 5000) {
   return new Promise((resolve, reject) => {

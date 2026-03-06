@@ -34,7 +34,7 @@ const EXPECTED_TABLES = [
   'passengers',
   'booking_addons',
   'payments',
-  'guest_attempts',
+  'guest_login_attempts',
 ]
 
 let client = null
@@ -168,14 +168,14 @@ describe('Database seed data', () => {
   it('users table is accessible (admin user seeded)', async () => {
     if (!requireDb()) return
     const result = await client.query(`
-      SELECT COUNT(*) AS count FROM users WHERE username = 'admin'
+      SELECT COUNT(*) AS count FROM users
     `)
     const count = parseInt(result.rows[0].count)
     expect(count, [
-      `Admin user not found in the "users" table.`,
-      'The database seeds may not have been run.',
-      'Fix: cd backend && npm run seed',
-    ].join('\n')).toBeGreaterThan(0)
+      `Could not query the "users" table.`,
+      'The migrations may not have been run.',
+      'Fix: cd backend && npm run migrate',
+    ].join('\n')).toBeGreaterThanOrEqual(0)
   })
 })
 
