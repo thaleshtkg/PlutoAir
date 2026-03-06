@@ -1,4 +1,4 @@
-import db from '../../src/db/connection.js';
+import db from '../../backend/src/db/connection.js';
 
 const TABLES = [
   'payments',

@@ -1,32 +1,56 @@
-# Node modules
+# ── Dependencies ─────────────────────────────────────────────
 node_modules/
 
-# Environment files (keep .env.example files)
+# ── Environment files (keep *.example as documentation) ──────
 .env
+.env.local
+.env.*.local
 backend/.env
 frontend/.env
 
-# Build output
+# ── Build output ──────────────────────────────────────────────
 frontend/dist/
+backend/dist/
+build/
 
-# Logs
-*.log
-backend/backend.log
+# ── Test coverage reports ─────────────────────────────────────
+coverage/
+frontend/coverage/
+backend/coverage/
+*.lcov
+.nyc_output/
 
-# Test artifacts (generated output)
+# ── Test runtime artifacts ────────────────────────────────────
 test-artifacts/
 test-results/
+playwright-report/
+blob-report/
+.vitest/
+vitest-cache/
 
-# Temporary Claude session files
-tmpclaude-*
-.claude/
+# ── Logs ──────────────────────────────────────────────────────
+*.log
+logs/
+backend/backend.log
 
-# Windows artifacts
-nul
+# ── IDE / Editor ──────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.suo
+*.user
 
-# Error screenshots
-error-*.png
-
-# OS files
+# ── OS artifacts ──────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+nul
+
+# ── Error / debug screenshots ─────────────────────────────────
+error-*.png
+
+# ── Temporary / session files ─────────────────────────────────
+tmpclaude-*
+.claude/
+tmp/
+temp/

@@ -1,7 +1,7 @@
 import express from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { rateLimit } from '../../src/middleware/rateLimiter.js';
+import { rateLimit } from '../../../backend/src/middleware/rateLimiter.js';
 
 describe('rateLimit middleware', () => {
   it('counts only failed requests when countFailedOnly is enabled', async () => {

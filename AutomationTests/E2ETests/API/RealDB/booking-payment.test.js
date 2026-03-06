@@ -11,9 +11,9 @@ describe('DB-backed e2e: login -> search -> booking -> payment', () => {
     process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
     process.env.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'test-refresh-secret';
 
-    ({ default: app } = await import('../../src/app.js'));
-    dbHelpers = await import('../helpers/testDb.js');
-    ({ default: db } = await import('../../src/db/connection.js'));
+    ({ default: app } = await import('../../../../backend/src/app.js'));
+    dbHelpers = await import('../../../helpers/testDb.js');
+    ({ default: db } = await import('../../../../backend/src/db/connection.js'));
 
     await dbHelpers.resetSeedData();
   });

@@ -2,14 +2,29 @@
   "name": "qualititudeai-demo",
   "version": "1.0.0",
   "description": "Complete flight booking application built with React, Node.js, PostgreSQL, and designed for comprehensive QA testing.",
-  "main": "check-servers.js",
+  "type": "module",
   "scripts": {
+    "test:infra": "vitest run --config vitest.infra.config.js",
+    "test:infra:watch": "vitest --config vitest.infra.config.js",
+    "test:infra:system": "vitest run --config vitest.infra.config.js AutomationTests/InfraTests/01",
+    "test:infra:env": "vitest run --config vitest.infra.config.js AutomationTests/InfraTests/02",
+    "test:infra:docker": "vitest run --config vitest.infra.config.js AutomationTests/InfraTests/03",
+    "test:infra:ports": "vitest run --config vitest.infra.config.js AutomationTests/InfraTests/04",
+    "test:infra:db": "vitest run --config vitest.infra.config.js AutomationTests/InfraTests/05",
+    "test:infra:redis": "vitest run --config vitest.infra.config.js AutomationTests/InfraTests/06",
+    "test:infra:api": "vitest run --config vitest.infra.config.js AutomationTests/InfraTests/07",
+    "test:infra:frontend": "vitest run --config vitest.infra.config.js AutomationTests/InfraTests/08",
+    "test:infra:consistency": "vitest run --config vitest.infra.config.js AutomationTests/InfraTests/09",
+    "test:e2e:browser": "npx playwright test",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@playwright/test": "^1.58.2"
+    "@playwright/test": "^1.58.2",
+    "dotenv": "^17.3.1",
+    "pg": "^8.20.0",
+    "vitest": "^4.0.18"
   }
 }

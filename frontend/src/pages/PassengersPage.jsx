@@ -3,27 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { bookingAPI } from '../api/services'
 import { useBookingStore } from '../store/bookingStore'
 import StepBar from '../components/StepBar'
+import { calcAge, validateAge, buildPassengerList } from '../utils/passengerUtils'
 
 const COUNTRIES = ['India', 'United States', 'United Kingdom', 'France', 'Germany', 'Japan', 'China', 'Singapore', 'UAE', 'Russia', 'Other']
-
-function calcAge(dob, travelDate) {
-  const travel = new Date(travelDate || Date.now())
-  const birth = new Date(dob)
-  let years = travel.getFullYear() - birth.getFullYear()
-  let months = travel.getMonth() - birth.getMonth()
-  if (months < 0) { years--; months += 12 }
-  const totalMonths = years * 12 + months
-  return { years: years < 0 ? 0 : years, totalMonths: totalMonths < 0 ? 0 : totalMonths }
-}
-
-function validateAge(dob, category, travelDate) {
-  if (!dob) return ''
-  const { years, totalMonths } = calcAge(dob, travelDate)
-  if (category === 'ADULT' && years < 12) return 'Passenger age does not match the selected category. Adult must be 12+ years.'
-  if (category === 'CHILD' && (years < 2 || years > 11)) return 'Passenger age does not match the selected category. Child must be 2–11 years.'
-  if (category === 'NEWBORN' && totalMonths > 23) return 'Passenger age does not match the selected category. Newborn must be 0–23 months.'
-  return ''
-}
 
 function PassengerForm({ index, passenger, category, onChange, travelDate, errors }) {
   const catLabel = category === 'ADULT' ? 'Adult' : category === 'CHILD' ? 'Child' : 'Newborn'
@@ -127,14 +109,6 @@ function PassengerForm({ index, passenger, category, onChange, travelDate, error
       </div>
     </div>
   )
-}
-
-function buildPassengerList(adults, children, newborns) {
-  const list = []
-  for (let i = 0; i < adults; i++) list.push({ category: 'ADULT', first_name: '', last_name: '', dob: '', gender: '', nationality: '', passport_id: '' })
-  for (let i = 0; i < children; i++) list.push({ category: 'CHILD', first_name: '', last_name: '', dob: '', gender: '', nationality: '', passport_id: '' })
-  for (let i = 0; i < newborns; i++) list.push({ category: 'NEWBORN', first_name: '', last_name: '', dob: '', gender: '', nationality: '', passport_id: '' })
-  return list
 }
 
 export default function PassengersPage() {

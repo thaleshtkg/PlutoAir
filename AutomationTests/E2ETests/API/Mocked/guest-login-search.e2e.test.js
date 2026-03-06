@@ -6,7 +6,7 @@ const mockGuestIncrement = vi.fn();
 const mockGuestAttemptsRemaining = vi.fn();
 const mockFlightSearch = vi.fn();
 
-vi.mock('../../src/db/connection.js', () => {
+vi.mock('../../../../backend/src/db/connection.js', () => {
   const chain = {
     where: vi.fn(() => chain),
     first: vi.fn(async () => null),
@@ -22,7 +22,7 @@ vi.mock('../../src/db/connection.js', () => {
   return { default: db };
 });
 
-vi.mock('../../src/models/User.js', () => ({
+vi.mock('../../../../backend/src/models/User.js', () => ({
   User: {
     findByEmail: vi.fn(),
     verifyPassword: vi.fn(),
@@ -30,7 +30,7 @@ vi.mock('../../src/models/User.js', () => ({
   },
 }));
 
-vi.mock('../../src/models/GuestAttempt.js', () => ({
+vi.mock('../../../../backend/src/models/GuestAttempt.js', () => ({
   GuestAttempt: {
     isLimitReached: mockGuestIsLimitReached,
     increment: mockGuestIncrement,
@@ -38,7 +38,7 @@ vi.mock('../../src/models/GuestAttempt.js', () => ({
   },
 }));
 
-vi.mock('../../src/models/Flight.js', () => ({
+vi.mock('../../../../backend/src/models/Flight.js', () => ({
   City: { findAll: vi.fn(async () => []) },
   Airline: { findAll: vi.fn(async () => []) },
   Flight: {
@@ -65,7 +65,7 @@ describe('guest login -> refresh -> flight search', () => {
   });
 
   it('supports guest refresh and keeps search working', async () => {
-    const { default: app } = await import('../../src/app.js');
+    const { default: app } = await import('../../../../backend/src/app.js');
 
     const loginRes = await request(app)
       .post('/api/auth/login')
