@@ -4,6 +4,10 @@
   "description": "Complete flight booking application built with React, Node.js, PostgreSQL, and designed for comprehensive QA testing.",
   "type": "module",
   "scripts": {
+    "test:all": "node AutomationTests/run-all-tests.js",
+    "test:all:stop": "node AutomationTests/run-all-tests.js --stop-on-failure",
+    "test:all:skip-infra": "node AutomationTests/run-all-tests.js --skip-infra",
+    "test:all:quick": "node AutomationTests/run-all-tests.js --skip-infra --skip-browser",
     "test:infra": "vitest run --config vitest.infra.config.js",
     "test:infra:watch": "vitest --config vitest.infra.config.js",
     "test:infra:system": "vitest run --config vitest.infra.config.js AutomationTests/InfraTests/01",
