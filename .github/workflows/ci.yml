@@ -169,7 +169,7 @@ jobs:
         run: |
           echo "Verifying Redis is accepting connections..."
           for i in $(seq 1 15); do
-            if redis-cli -h 127.0.0.1 -p 6379 ping 2>/dev/null | grep -q PONG; then
+            if bash -c "</dev/tcp/127.0.0.1/6379" 2>/dev/null; then
               echo "✅ Redis is ready (attempt $i)"
               exit 0
             fi
@@ -288,7 +288,7 @@ jobs:
         run: |
           echo "Verifying Redis is accepting connections..."
           for i in $(seq 1 15); do
-            if redis-cli -h 127.0.0.1 -p 6379 ping 2>/dev/null | grep -q PONG; then
+            if bash -c "</dev/tcp/127.0.0.1/6379" 2>/dev/null; then
               echo "✅ Redis is ready (attempt $i)"
               exit 0
             fi
@@ -572,7 +572,7 @@ jobs:
         run: |
           echo "Verifying Redis is accepting connections..."
           for i in $(seq 1 15); do
-            if redis-cli -h 127.0.0.1 -p 6379 ping 2>/dev/null | grep -q PONG; then
+            if bash -c "</dev/tcp/127.0.0.1/6379" 2>/dev/null; then
               echo "✅ Redis is ready (attempt $i)"
               exit 0
             fi
