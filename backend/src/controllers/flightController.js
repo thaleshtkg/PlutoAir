@@ -27,14 +27,9 @@ export const flightController = {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const maxDate = new Date(today);
-    maxDate.setMonth(maxDate.getMonth() + 2);
 
-    if (travelDate < today || travelDate > maxDate) {
-      return httpResponses.badRequest(
-        res,
-        'Travel date must be from today up to the next 2 months'
-      );
+    if (travelDate < today) {
+      return httpResponses.badRequest(res, 'Travel date must not be in the past');
     }
 
     const flights = await Flight.search({

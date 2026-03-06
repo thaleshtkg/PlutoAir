@@ -3,9 +3,9 @@
  * For end-to-end validation of Flight Booking Application
  */
 
-const { defineConfig, devices } = require('@playwright/test');
+import { defineConfig, devices } from '@playwright/test';
 
-module.exports = defineConfig({
+export default defineConfig({
   testDir: './AutomationTests/E2ETests/Browser',
   testMatch: '**/*.spec.js',
   
