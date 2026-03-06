@@ -1,0 +1,539 @@
+# ============================================================
+# PlutoAir CI — Full-Stack Flight Booking App
+# Triggers on every push to master and every PR targeting master
+# ============================================================
+name: PlutoAir CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+# Restrict GITHUB_TOKEN to read-only access (principle of least privilege)
+permissions:
+  contents: read
+
+# Cancel in-progress runs when a new commit is pushed to the same PR/branch
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# ---------------------------------------------------------------------------
+# Job 1 — Frontend Tests (Vitest/jsdom, no services needed)
+# ---------------------------------------------------------------------------
+jobs:
+  frontend-tests:
+    name: Frontend Tests (Vitest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache frontend node_modules
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-frontend-
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run frontend tests with coverage
+        working-directory: frontend
+        run: npm run test:coverage
+
+      - name: Upload frontend coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # Job 2 — Backend Unit Tests (Vitest, no services needed)
+  # ---------------------------------------------------------------------------
+  backend-unit:
+    name: Backend Unit Tests (Vitest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache backend node_modules
+        uses: actions/cache@v4
+        with:
+          path: backend/node_modules
+          key: ${{ runner.os }}-backend-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run backend unit tests
+        working-directory: backend
+        run: npm run test:unit
+
+  # ---------------------------------------------------------------------------
+  # Job 3 — Backend Integration Tests – Mocked DB (Redis required)
+  # ---------------------------------------------------------------------------
+  backend-integration-mocked:
+    name: Backend Integration Tests – Mocked DB
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache backend node_modules
+        uses: actions/cache@v4
+        with:
+          path: backend/node_modules
+          key: ${{ runner.os }}-backend-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Write backend .env
+        working-directory: backend
+        run: |
+          printf '%s\n' \
+            "DB_HOST=localhost" \
+            "DB_PORT=5432" \
+            "DB_USER=flightuser" \
+            "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            "DB_NAME=flight_booking" \
+            "TEST_DB_HOST=localhost" \
+            "TEST_DB_PORT=5432" \
+            "TEST_DB_USER=flightuser" \
+            "TEST_DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            "TEST_DB_NAME=flight_booking_test" \
+            "REDIS_URL=redis://localhost:6379" \
+            "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
+            "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}" \
+            "JWT_EXPIRY=3600" \
+            "JWT_REFRESH_EXPIRY=604800" \
+            "PORT=5000" \
+            "NODE_ENV=test" \
+            "CORS_ORIGIN=http://localhost:5173" \
+            "SESSION_TIMEOUT=3600" \
+            "GUEST_SESSION_LIMIT=20" \
+            "PAYMENT_CALLBACK_SECRET=${{ secrets.PAYMENT_CALLBACK_SECRET }}" \
+            "PAYMENT_REDIRECT_URL=http://localhost:5000/payment/dummy-bank" \
+            "SMTP_HOST=smtp.mailtrap.io" \
+            "SMTP_PORT=2525" \
+            "SMTP_USER=placeholder" \
+            "SMTP_PASS=placeholder" \
+            > .env
+
+      - name: Run backend integration tests (mocked DB)
+        working-directory: backend
+        run: npm run test:integration
+
+  # ---------------------------------------------------------------------------
+  # Job 4 — Backend Real-DB Tests (PostgreSQL + Redis required)
+  #         Runs both integration/RealDB and E2E API tests
+  # ---------------------------------------------------------------------------
+  backend-realdb:
+    name: Backend Tests – Real DB (Integration + E2E API)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: flightuser
+          POSTGRES_PASSWORD: flightpass123
+          POSTGRES_DB: flight_booking
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U flightuser -d flight_booking"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache backend node_modules
+        uses: actions/cache@v4
+        with:
+          path: backend/node_modules
+          key: ${{ runner.os }}-backend-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Write backend .env
+        working-directory: backend
+        run: |
+          printf '%s\n' \
+            "DB_HOST=localhost" \
+            "DB_PORT=5432" \
+            "DB_USER=flightuser" \
+            "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            "DB_NAME=flight_booking" \
+            "TEST_DB_HOST=localhost" \
+            "TEST_DB_PORT=5432" \
+            "TEST_DB_USER=flightuser" \
+            "TEST_DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            "TEST_DB_NAME=flight_booking_test" \
+            "REDIS_URL=redis://localhost:6379" \
+            "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
+            "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}" \
+            "JWT_EXPIRY=3600" \
+            "JWT_REFRESH_EXPIRY=604800" \
+            "PORT=5000" \
+            "NODE_ENV=test" \
+            "CORS_ORIGIN=http://localhost:5173" \
+            "SESSION_TIMEOUT=3600" \
+            "GUEST_SESSION_LIMIT=20" \
+            "PAYMENT_CALLBACK_SECRET=${{ secrets.PAYMENT_CALLBACK_SECRET }}" \
+            "PAYMENT_REDIRECT_URL=http://localhost:5000/payment/dummy-bank" \
+            "SMTP_HOST=smtp.mailtrap.io" \
+            "SMTP_PORT=2525" \
+            "SMTP_USER=placeholder" \
+            "SMTP_PASS=placeholder" \
+            > .env
+
+      - name: Prepare test database (create, migrate, seed)
+        working-directory: backend
+        run: npm run test:prepare-db
+
+      - name: Run backend integration tests (real DB)
+        working-directory: backend
+        run: npm run test:integration
+
+      - name: Run backend E2E API tests (real DB)
+        working-directory: backend
+        run: npm run test:e2e:api
+
+  # ---------------------------------------------------------------------------
+  # Job 5 — Infra Checks (subset safe to run in CI without live containers)
+  # ---------------------------------------------------------------------------
+  infra-checks:
+    name: Infrastructure Checks (CI-safe subset)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache root node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-root-
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Write backend .env
+        working-directory: backend
+        run: |
+          printf '%s\n' \
+            "DB_HOST=localhost" \
+            "DB_PORT=5432" \
+            "DB_USER=flightuser" \
+            "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            "DB_NAME=flight_booking" \
+            "TEST_DB_HOST=localhost" \
+            "TEST_DB_PORT=5432" \
+            "TEST_DB_USER=flightuser" \
+            "TEST_DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            "TEST_DB_NAME=flight_booking_test" \
+            "REDIS_URL=redis://localhost:6379" \
+            "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
+            "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}" \
+            "JWT_EXPIRY=3600" \
+            "JWT_REFRESH_EXPIRY=604800" \
+            "PORT=5000" \
+            "NODE_ENV=test" \
+            "CORS_ORIGIN=http://localhost:5173" \
+            "SESSION_TIMEOUT=3600" \
+            "GUEST_SESSION_LIMIT=20" \
+            "PAYMENT_CALLBACK_SECRET=${{ secrets.PAYMENT_CALLBACK_SECRET }}" \
+            "PAYMENT_REDIRECT_URL=http://localhost:5000/payment/dummy-bank" \
+            "SMTP_HOST=smtp.mailtrap.io" \
+            "SMTP_PORT=2525" \
+            "SMTP_USER=placeholder" \
+            "SMTP_PASS=placeholder" \
+            > .env
+
+      - name: Run infra system check (Node/npm/Docker CLI versions)
+        run: npm run test:infra:system
+
+      - name: Run infra env check (backend .env required keys)
+        run: npm run test:infra:env
+
+      - name: Run infra consistency check (cross-service config)
+        run: npm run test:infra:consistency
+
+  # ---------------------------------------------------------------------------
+  # Job 6 — Browser E2E Tests (Playwright/Chromium)
+  #         Depends on backend-realdb and frontend-tests passing first
+  # ---------------------------------------------------------------------------
+  browser-e2e:
+    name: Browser E2E Tests (Playwright / Chromium)
+    runs-on: ubuntu-latest
+    needs: [backend-realdb, frontend-tests]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: flightuser
+          POSTGRES_PASSWORD: flightpass123
+          POSTGRES_DB: flight_booking
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U flightuser -d flight_booking"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache root node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-root-
+
+      - name: Cache backend node_modules
+        uses: actions/cache@v4
+        with:
+          path: backend/node_modules
+          key: ${{ runner.os }}-backend-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-
+
+      - name: Cache frontend node_modules
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-frontend-
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Write backend .env
+        working-directory: backend
+        run: |
+          printf '%s\n' \
+            "DB_HOST=localhost" \
+            "DB_PORT=5432" \
+            "DB_USER=flightuser" \
+            "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            "DB_NAME=flight_booking" \
+            "TEST_DB_HOST=localhost" \
+            "TEST_DB_PORT=5432" \
+            "TEST_DB_USER=flightuser" \
+            "TEST_DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            "TEST_DB_NAME=flight_booking_test" \
+            "REDIS_URL=redis://localhost:6379" \
+            "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
+            "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}" \
+            "JWT_EXPIRY=3600" \
+            "JWT_REFRESH_EXPIRY=604800" \
+            "PORT=5000" \
+            "NODE_ENV=development" \
+            "CORS_ORIGIN=http://localhost:5173" \
+            "SESSION_TIMEOUT=3600" \
+            "GUEST_SESSION_LIMIT=20" \
+            "PAYMENT_CALLBACK_SECRET=${{ secrets.PAYMENT_CALLBACK_SECRET }}" \
+            "PAYMENT_REDIRECT_URL=http://localhost:5000/payment/dummy-bank" \
+            "SMTP_HOST=smtp.mailtrap.io" \
+            "SMTP_PORT=2525" \
+            "SMTP_USER=placeholder" \
+            "SMTP_PASS=placeholder" \
+            > .env
+
+      - name: Prepare test database (migrate + seed for test DB)
+        working-directory: backend
+        run: npm run test:prepare-db
+
+      - name: Migrate and seed main (development) database for browser tests
+        working-directory: backend
+        env:
+          NODE_ENV: development
+        run: |
+          npx knex migrate:latest --env development
+          npx knex seed:run --env development
+
+      - name: Install Playwright browsers (Chromium only)
+        run: npx playwright install --with-deps chromium
+
+      - name: Start backend dev server
+        working-directory: backend
+        run: npm run dev &
+
+      - name: Wait for backend to be ready on :5000
+        run: npx wait-on http://localhost:5000 --timeout 60000
+
+      - name: Start frontend dev server
+        working-directory: frontend
+        run: npm run dev &
+
+      - name: Wait for frontend to be ready on :5173
+        run: npx wait-on http://localhost:5173 --timeout 60000
+
+      - name: Run Playwright browser E2E tests
+        run: npm run test:e2e:browser
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+            test-artifacts/
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # Job 7 — CI Summary (required status check for branch protection rules)
+  # ---------------------------------------------------------------------------
+  ci-summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs:
+      - frontend-tests
+      - backend-unit
+      - backend-integration-mocked
+      - backend-realdb
+      - infra-checks
+      - browser-e2e
+    # Always run so the summary is posted even when a job fails
+    if: always()
+
+    steps:
+      - name: Evaluate all job results
+        env:
+          FRONTEND_RESULT: ${{ needs.frontend-tests.result }}
+          BACKEND_UNIT_RESULT: ${{ needs.backend-unit.result }}
+          BACKEND_MOCKED_RESULT: ${{ needs.backend-integration-mocked.result }}
+          BACKEND_REALDB_RESULT: ${{ needs.backend-realdb.result }}
+          INFRA_RESULT: ${{ needs.infra-checks.result }}
+          BROWSER_RESULT: ${{ needs.browser-e2e.result }}
+        run: |
+          echo "================================================"
+          echo "  PlutoAir CI — Final Status Summary"
+          echo "================================================"
+          echo "  frontend-tests               : $FRONTEND_RESULT"
+          echo "  backend-unit                 : $BACKEND_UNIT_RESULT"
+          echo "  backend-integration-mocked   : $BACKEND_MOCKED_RESULT"
+          echo "  backend-realdb               : $BACKEND_REALDB_RESULT"
+          echo "  infra-checks                 : $INFRA_RESULT"
+          echo "  browser-e2e                  : $BROWSER_RESULT"
+          echo "================================================"
+
+          ALL_PASSED=true
+          for result in "$FRONTEND_RESULT" "$BACKEND_UNIT_RESULT" "$BACKEND_MOCKED_RESULT" \
+                        "$BACKEND_REALDB_RESULT" "$INFRA_RESULT" "$BROWSER_RESULT"; do
+            if [ "$result" != "success" ]; then
+              ALL_PASSED=false
+              break
+            fi
+          done
+
+          if [ "$ALL_PASSED" = "true" ]; then
+            echo "✅  All jobs passed — ready to merge."
+          else
+            echo "❌  One or more jobs failed — merge is blocked."
+            exit 1
+          fi
