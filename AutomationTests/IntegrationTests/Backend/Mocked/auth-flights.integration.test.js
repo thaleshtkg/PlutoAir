@@ -95,7 +95,6 @@ describe('auth + flights integration', () => {
       { id: 'f1', flight_number: '6E-201', base_price_adult: 3499, duration_mins: 125 },
     ]);
 
-    // Use a date 30 days from now — must stay within the backend's 2-month window
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + 30);
     const travel_date = futureDate.toISOString().split('T')[0];
@@ -126,5 +125,45 @@ describe('auth + flights integration', () => {
     expect(response.body.success).toBe(true);
     expect(response.body.data).toHaveLength(1);
     expect(mockFlightSearch).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects past travel dates and accepts far-future dates', async () => {
+    const { default: app } = await import('../../../../backend/src/app.js');
+    const accessToken = jwt.sign(
+      { id: 'u-1', email: 'user@example.com', is_guest: false },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+    mockFlightSearch.mockResolvedValue([]);
+
+    // Past date should be rejected
+    const pastDate = new Date();
+    pastDate.setDate(pastDate.getDate() - 1);
+    await request(app)
+      .post('/api/flights/search')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        origin_id: 1,
+        destination_id: 2,
+        travel_date: pastDate.toISOString().split('T')[0],
+        adults: 1,
+        children: 0,
+        newborns: 0,
+      })
+      .expect(400);
+
+    // A far-future date (years ahead) should be accepted
+    await request(app)
+      .post('/api/flights/search')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        origin_id: 1,
+        destination_id: 2,
+        travel_date: '2030-01-10',
+        adults: 1,
+        children: 0,
+        newborns: 0,
+      })
+      .expect(200);
   });
 });
