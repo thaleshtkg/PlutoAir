@@ -602,14 +602,14 @@ jobs:
         run: npm run dev &
 
       - name: Wait for backend to be ready on :5000
-        run: npx wait-on http://localhost:5000 --timeout 60000
+        run: npx wait-on http-get://localhost:5000/health --timeout 60000
 
       - name: Start frontend dev server
         working-directory: frontend
         run: npm run dev &
 
       - name: Wait for frontend to be ready on :5173
-        run: npx wait-on http://localhost:5173 --timeout 60000
+        run: npx wait-on http-get://localhost:5173 --timeout 60000
 
       - name: Run Playwright browser E2E tests
         run: npm run test:e2e:browser
