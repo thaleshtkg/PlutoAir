@@ -95,13 +95,18 @@ describe('auth + flights integration', () => {
       { id: 'f1', flight_number: '6E-201', base_price_adult: 3499, duration_mins: 125 },
     ]);
 
+    // Use a date 30 days from now — must stay within the backend's 2-month window
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 30);
+    const travel_date = futureDate.toISOString().split('T')[0];
+
     await request(app)
       .post('/api/flights/search')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         origin_id: 1,
         destination_id: 2,
-        travel_date: '2030-01-10',
+        travel_date,
       })
       .expect(400);
 
@@ -111,7 +116,7 @@ describe('auth + flights integration', () => {
       .send({
         origin_id: 1,
         destination_id: 2,
-        travel_date: '2030-01-10',
+        travel_date,
         adults: 1,
         children: 0,
         newborns: 0,
