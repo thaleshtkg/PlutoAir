@@ -46,7 +46,7 @@ describe('Node.js', () => {
 // npm
 // ---------------------------------------------------------------------------
 describe('npm', () => {
-  it('is installed and meets minimum version (v8+)', () => {
+  it('is installed and meets minimum version (v9+)', () => {
     const out = tryExec('npm --version')
     expect(out, [
       '"npm" not found. Install Node.js (npm is bundled with it).',
@@ -54,9 +54,9 @@ describe('npm', () => {
 
     const major = parseInt(out.split('.')[0])
     expect(major, [
-      `npm ${out} is below the required minimum v8.`,
+      `npm ${out} is below the required minimum v9.`,
       `Fix: npm install -g npm@latest`,
-    ].join('\n')).toBeGreaterThanOrEqual(8)
+    ].join('\n')).toBeGreaterThanOrEqual(9)
   })
 })
 

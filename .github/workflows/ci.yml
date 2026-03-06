@@ -165,6 +165,20 @@ jobs:
             "SMTP_PASS=placeholder" \
             > .env
 
+      - name: Verify Redis service is healthy
+        run: |
+          echo "Verifying Redis is accepting connections..."
+          for i in $(seq 1 15); do
+            if redis-cli -h 127.0.0.1 -p 6379 ping 2>/dev/null | grep -q PONG; then
+              echo "✅ Redis is ready (attempt $i)"
+              exit 0
+            fi
+            echo "  attempt $i/15 — retrying in 2s"
+            sleep 2
+          done
+          echo "❌ Redis did not become ready in time"
+          exit 1
+
       - name: Run backend integration tests (mocked DB only)
         working-directory: backend
         run: npm run test:integration:mocked
@@ -256,6 +270,34 @@ jobs:
             "SMTP_PASS=placeholder" \
             > .env
 
+      - name: Verify PostgreSQL service is healthy
+        run: |
+          echo "Verifying PostgreSQL is accepting connections..."
+          for i in $(seq 1 15); do
+            if pg_isready -h 127.0.0.1 -p 5432 -U flightuser 2>/dev/null; then
+              echo "✅ PostgreSQL is ready (attempt $i)"
+              exit 0
+            fi
+            echo "  attempt $i/15 — retrying in 2s"
+            sleep 2
+          done
+          echo "❌ PostgreSQL did not become ready in time"
+          exit 1
+
+      - name: Verify Redis service is healthy
+        run: |
+          echo "Verifying Redis is accepting connections..."
+          for i in $(seq 1 15); do
+            if redis-cli -h 127.0.0.1 -p 6379 ping 2>/dev/null | grep -q PONG; then
+              echo "✅ Redis is ready (attempt $i)"
+              exit 0
+            fi
+            echo "  attempt $i/15 — retrying in 2s"
+            sleep 2
+          done
+          echo "❌ Redis did not become ready in time"
+          exit 1
+
       - name: Prepare test database (create, migrate, seed)
         working-directory: backend
         run: npm run test:prepare-db
@@ -283,6 +325,48 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Validate prerequisites (Node.js ≥18 / npm ≥9 / Docker + Compose)
+        run: |
+          echo "=== Checking prerequisites ==="
+
+          echo "--- Node.js ---"
+          node --version
+          NODE_MAJOR=$(node -p "process.versions.node.split('.')[0]")
+          if [ -z "$NODE_MAJOR" ] || [ "$NODE_MAJOR" -lt 18 ]; then
+            echo "❌ Node.js major version '$NODE_MAJOR' is below the required minimum v18"
+            exit 1
+          fi
+          echo "✅ Node.js v$NODE_MAJOR meets requirement (≥18)"
+
+          echo "--- npm ---"
+          npm --version
+          NPM_VERSION=$(npm --version)
+          NPM_MAJOR=$(echo "$NPM_VERSION" | cut -d. -f1)
+          if [ -z "$NPM_MAJOR" ] || [ "$NPM_MAJOR" -lt 9 ]; then
+            echo "❌ npm $NPM_VERSION is below the required minimum v9"
+            exit 1
+          fi
+          echo "✅ npm v$NPM_MAJOR meets requirement (≥9)"
+
+          echo "--- Docker CLI ---"
+          if ! docker --version 2>/dev/null; then
+            echo "❌ Docker CLI not found"
+            exit 1
+          fi
+          echo "✅ Docker CLI available"
+
+          echo "--- Docker Compose ---"
+          if docker compose version 2>/dev/null; then
+            echo "✅ Docker Compose V2 available"
+          elif docker-compose --version 2>/dev/null; then
+            echo "✅ Docker Compose V1 available"
+          else
+            echo "❌ Neither 'docker compose' nor 'docker-compose' found"
+            exit 1
+          fi
+
+          echo "=== All prerequisites satisfied ==="
 
       - name: Cache root node_modules
         uses: actions/cache@v4
@@ -469,6 +553,34 @@ jobs:
             "SMTP_USER=placeholder" \
             "SMTP_PASS=placeholder" \
             > .env
+
+      - name: Verify PostgreSQL service is healthy
+        run: |
+          echo "Verifying PostgreSQL is accepting connections..."
+          for i in $(seq 1 15); do
+            if pg_isready -h 127.0.0.1 -p 5432 -U flightuser 2>/dev/null; then
+              echo "✅ PostgreSQL is ready (attempt $i)"
+              exit 0
+            fi
+            echo "  attempt $i/15 — retrying in 2s"
+            sleep 2
+          done
+          echo "❌ PostgreSQL did not become ready in time"
+          exit 1
+
+      - name: Verify Redis service is healthy
+        run: |
+          echo "Verifying Redis is accepting connections..."
+          for i in $(seq 1 15); do
+            if redis-cli -h 127.0.0.1 -p 6379 ping 2>/dev/null | grep -q PONG; then
+              echo "✅ Redis is ready (attempt $i)"
+              exit 0
+            fi
+            echo "  attempt $i/15 — retrying in 2s"
+            sleep 2
+          done
+          echo "❌ Redis did not become ready in time"
+          exit 1
 
       - name: Prepare test database (migrate + seed for test DB)
         working-directory: backend
