@@ -1,0 +1,203 @@
+================================================================================
+                    END-TO-END TEST FLOW DIAGRAM
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         AUTOMATED E2E TEST FLOW                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                              START TEST
+                                  │
+                                  ▼
+                    ┌─────────────────────────┐
+                    │   Pre-Flight Checks     │
+                    │  - Servers running?     │
+                    │  - Dependencies OK?     │
+                    └───────────┬─────────────┘
+                                │
+                                ▼
+                    ┌─────────────────────────┐
+                    │   STEP 1: LOGIN         │
+                    │  /login                 │
+                    │                         │
+                    │  Try: admin/admin@123   │
+                    └───────────┬─────────────┘
+                                │
+                    ┌───────────┴──────────┐
+                    │                      │
+              Guest Limit?            Success
+                    │                      │
+                    ▼                      │
+        ┌───────────────────────┐          │
+        │  STEP 1B: REGISTER    │          │
+        │  /register            │          │
+        │                       │          │
+        │  Create new user      │          │
+        │  Then login           │          │
+        └───────────┬───────────┘          │
+                    │                      │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                    ┌─────────────────────────┐
+                    │  STEP 2: SEARCH         │
+                    │  /search                │
+                    │                         │
+                    │  Origin: New Delhi      │
+                    │  Dest: Mumbai           │
+                    │  Date: Tomorrow         │
+                    │  Passengers: 1          │
+                    └───────────┬─────────────┘
+                                │
+                                ▼
+                    ┌─────────────────────────┐
+                    │  STEP 3: SELECT FLIGHT  │
+                    │  /results               │
+                    │                         │
+                    │  Select first flight    │
+                    └───────────┬─────────────┘
+                                │
+                                ▼
+                    ┌─────────────────────────┐
+                    │  STEP 4: PASSENGERS     │
+                    │  /passengers            │
+                    │                         │
+                    │  Name: John Doe         │
+                    │  Email: john@ex.com     │
+                    │  Phone: 9876543210      │
+                    └───────────┬─────────────┘
+                                │
+                                ▼
+                    ┌─────────────────────────┐
+                    │  STEP 5: ADD-ONS        │
+                    │  /add-ons               │
+                    │                         │
+                    │  Select ≥1 add-on       │
+                    └───────────┬─────────────┘
+                                │
+                                ▼
+                    ┌─────────────────────────┐
+                    │  STEP 6: SUMMARY        │
+                    │  /summary               │
+                    │                         │
+                    │  Review & confirm       │
+                    └───────────┬─────────────┘
+                                │
+                                ▼
+                    ┌─────────────────────────┐
+                    │  STEP 7: PAYMENT        │
+                    │  /payment               │
+                    │                         │
+                    │  UPI: test@upi          │
+                    │  OR Card: 4111...       │
+                    └───────────┬─────────────┘
+                                │
+                                ▼
+                    ┌─────────────────────────┐
+                    │  STEP 8: CONFIRMATION   │
+                    │  /confirmation          │
+                    │                         │
+                    │  Verify success message │
+                    └───────────┬─────────────┘
+                                │
+                                ▼
+                          TEST COMPLETE
+                                │
+                    ┌───────────┴───────────┐
+                    │                       │
+              All Steps Pass          Any Step Fails
+                    │                       │
+                    ▼                       ▼
+            ┌───────────────┐      ┌────────────────┐
+            │  RESULT: PASS │      │  RESULT: FAIL  │
+            │               │      │                │
+            │  ✅ Success   │      │  ❌ Error      │
+            │  📊 Report    │      │  📸 Screenshot │
+            │  📁 Artifacts │      │  📊 Report     │
+            └───────────────┘      │  📁 Artifacts  │
+                                   │  🔍 Debug Info │
+                                   └────────────────┘
+
+================================================================================
+                            VALIDATION POINTS
+================================================================================
+
+At Each Step:
+  ✓ Page navigation successful
+  ✓ Required elements present
+  ✓ Forms can be filled
+  ✓ Buttons are enabled
+  ✓ No console errors
+  ✓ No network failures
+  ✓ Correct URL reached
+
+On Failure:
+  • Capture screenshot
+  • Log error message
+  • Record current URL
+  • Note console errors
+  • List network failures
+  • Continue if possible
+
+================================================================================
+                              TEST OUTPUTS
+================================================================================
+
+Console Output:
+  • Step-by-step progress
+  • Pass/Fail for each step
+  • Error details
+  • Final summary
+
+Files Generated:
+  • error-*.png (screenshots on failure)
+  • test-results/ (Playwright artifacts)
+  • HTML report (Playwright)
+  • JSON results (Playwright)
+
+Report Contents:
+  • Overall PASS/FAIL
+  • Step-by-step results
+  • Failure points & causes
+  • Console errors
+  • Network errors
+  • Final URL reached
+
+================================================================================
+                            USAGE COMMANDS
+================================================================================
+
+Master Script (Recommended):
+  $ node run-e2e-test.js playwright
+  $ node run-e2e-test.js puppeteer
+
+Check Servers:
+  $ node check-servers.js
+
+Manual Playwright:
+  $ npx playwright test e2e-validation.spec.js --headed
+  $ npx playwright test e2e-validation.spec.js --debug
+  $ npx playwright show-report
+
+Manual Puppeteer:
+  $ node e2e-validation-puppeteer.js
+
+================================================================================
+                          TROUBLESHOOTING FLOW
+================================================================================
+
+Test Fails?
+    │
+    ├─► Check servers running → node check-servers.js
+    │
+    ├─► Review screenshot → error-*.png
+    │
+    ├─► Check console errors → In test output
+    │
+    ├─► Run with visible browser → --headed --slowmo=1000
+    │
+    ├─► Debug step-by-step → --debug (Playwright)
+    │
+    └─► Check backend logs → Terminal running backend
+
+================================================================================

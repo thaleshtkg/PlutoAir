@@ -1,0 +1,15 @@
+{
+  "name": "qualititudeai-demo",
+  "version": "1.0.0",
+  "description": "Complete flight booking application built with React, Node.js, PostgreSQL, and designed for comprehensive QA testing.",
+  "main": "check-servers.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

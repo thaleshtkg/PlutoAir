@@ -1,0 +1,32 @@
+# Node modules
+node_modules/
+
+# Environment files (keep .env.example files)
+.env
+backend/.env
+frontend/.env
+
+# Build output
+frontend/dist/
+
+# Logs
+*.log
+backend/backend.log
+
+# Test artifacts (generated output)
+test-artifacts/
+test-results/
+
+# Temporary Claude session files
+tmpclaude-*
+.claude/
+
+# Windows artifacts
+nul
+
+# Error screenshots
+error-*.png
+
+# OS files
+.DS_Store
+Thumbs.db

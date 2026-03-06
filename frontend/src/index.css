@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply box-border;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply font-sans text-gray-900 bg-gray-50;
+}
+
+/* Form Styles */
+input,
+select,
+textarea {
+  @apply bg-white border border-gray-300 rounded-lg px-3 py-2 transition-colors duration-300;
+  @apply focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100;
+}
+
+input:disabled {
+  @apply bg-gray-100 text-gray-500 cursor-not-allowed;
+}
+
+/* Button Styles */
+button {
+  @apply font-medium transition-all duration-300 rounded-lg;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-6 py-2.5 hover:shadow-lg active:scale-95;
+}
+
+.btn-primary:disabled {
+  @apply opacity-50 cursor-not-allowed active:scale-100;
+}
+
+.btn-secondary {
+  @apply bg-white text-primary-600 border border-primary-200 px-6 py-2.5 hover:bg-primary-50;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white px-6 py-2.5 hover:bg-red-700;
+}
+
+/* Card Styles */
+.card {
+  @apply bg-white rounded-lg shadow-md p-6;
+}
+
+.card-lg {
+  @apply bg-white rounded-lg shadow-lg p-8;
+}
+
+/* Loading Skeleton */
+.skeleton {
+  @apply bg-gray-200 rounded animate-pulse;
+}
+
+.skeleton-text {
+  @apply h-4 bg-gray-200 rounded;
+}
+
+.skeleton-avatar {
+  @apply h-12 w-12 bg-gray-200 rounded-full;
+}
+
+/* Toast Notifications */
+.toast {
+  @apply fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg text-white text-sm z-50 animate-slide-up;
+}
+
+.toast-success {
+  @apply bg-green-500;
+}
+
+.toast-error {
+  @apply bg-red-500;
+}
+
+.toast-info {
+  @apply bg-blue-500;
+}
+
+.toast-warning {
+  @apply bg-yellow-500;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+}
+
+.modal {
+  @apply bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4;
+}
+
+/* Progress Indicator */
+.progress-bar {
+  @apply h-1 bg-gray-200 rounded-full overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all duration-300;
+}
+
+/* Success/Error States */
+.input-success {
+  @apply border-green-500 focus:ring-green-100;
+}
+
+.input-error {
+  @apply border-red-500 focus:ring-red-100;
+}
+
+.error-text {
+  @apply text-red-600 text-sm mt-1;
+}
+
+.success-text {
+  @apply text-green-600 text-sm mt-1;
+}
+
+/* Animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Responsive Grid */
+.grid-responsive {
+  @apply grid gap-4 md:grid-cols-2 lg:grid-cols-3;
+}
+
+/* Utility Classes */
+.text-truncate {
+  @apply truncate;
+}
+
+.flex-center {
+  @apply flex items-center justify-center;
+}
+
+.container-center {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+/* Focus Visible for Keyboard Navigation */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  @apply outline-2 outline-offset-2 outline-primary-500;
+}
