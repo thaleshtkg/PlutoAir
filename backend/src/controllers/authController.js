@@ -28,7 +28,7 @@ export const authController = {
     const isGuest = username === 'admin' && password === 'admin@123';
 
     if (isGuest) {
-      const clientId = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
+      const clientId = req.ip || req.socket?.remoteAddress || 'unknown-client';
 
       // Check if guest limit reached
       const isLimited = await GuestAttempt.isLimitReached(clientId);
@@ -162,7 +162,7 @@ export const authController = {
   }),
 
   guestCheck: asyncHandler(async (req, res) => {
-    const clientId = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
+    const clientId = req.ip || req.socket?.remoteAddress || 'unknown-client';
     const attemptsRemaining = await GuestAttempt.getAttemptsRemaining(clientId);
     const isLimited = await GuestAttempt.isLimitReached(clientId);
 

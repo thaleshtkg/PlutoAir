@@ -2,13 +2,9 @@ import { httpResponses } from '../utils/responseFormat.js';
 
 const rateLimitStore = new Map();
 
-const getClientId = (req) => {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length > 0) {
-    return forwarded.split(',')[0].trim();
-  }
-  return req.ip || req.connection?.remoteAddress || 'unknown-client';
-};
+// Use req.ip which Express normalises correctly when `trust proxy` is set in app.js.
+// Reading x-forwarded-for directly is spoofable — a client could send any IP to bypass limits.
+const getClientId = (req) => req.ip || req.socket?.remoteAddress || 'unknown-client';
 
 export const rateLimit = (options = {}) => {
   const {

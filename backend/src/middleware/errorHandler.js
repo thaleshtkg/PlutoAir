@@ -7,11 +7,17 @@ export const errorHandler = (err, req, res, next) => {
     return httpResponses.badRequest(res, 'Invalid JSON');
   }
 
-  if (err.message.includes('duplicate key')) {
+  // PostgreSQL unique-violation error code — more reliable than string matching on the message.
+  if (err.code === '23505') {
     return httpResponses.conflict(res, 'Resource already exists');
   }
 
-  return httpResponses.serverError(res, err.message || 'Internal server error');
+  // Never expose raw error internals (stack traces, SQL, column names) to API clients in production.
+  const message = process.env.NODE_ENV === 'production'
+    ? 'Internal server error'
+    : (err.message || 'Internal server error');
+
+  return httpResponses.serverError(res, message);
 };
 
 export const notFoundHandler = (req, res) => {

@@ -20,7 +20,7 @@
     "test:infra:frontend": "vitest run --config vitest.infra.config.js AutomationTests/InfraTests/08",
     "test:infra:consistency": "vitest run --config vitest.infra.config.js AutomationTests/InfraTests/09",
     "test:e2e:browser": "npx playwright test",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node AutomationTests/run-all-tests.js"
   },
   "keywords": [],
   "author": "",

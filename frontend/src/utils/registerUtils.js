@@ -4,6 +4,7 @@
  * @returns {{ label: string, color: string, width: string }}
  */
 export function getPasswordStrength(password) {
+  if (!password) return { label: 'Weak', color: 'bg-red-500', width: '25%' }
   let score = 0
   if (password.length >= 8) score++
   if (/[A-Z]/.test(password)) score++

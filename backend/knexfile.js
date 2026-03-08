@@ -8,7 +8,7 @@ export const knexConfig = {
       user: process.env.DB_USER || 'flightuser',
       password: process.env.DB_PASSWORD || 'flightpass123',
       database: process.env.DB_NAME || 'flight_booking',
-      port: process.env.DB_PORT || 5432,
+      port: Number(process.env.DB_PORT) || 5432,
     },
     migrations: {
       directory: './src/db/migrations',
@@ -24,7 +24,7 @@ export const knexConfig = {
       user: process.env.TEST_DB_USER || process.env.DB_USER || 'flightuser',
       password: process.env.TEST_DB_PASSWORD || process.env.DB_PASSWORD || 'flightpass123',
       database: process.env.TEST_DB_NAME || 'flight_booking_test',
-      port: process.env.TEST_DB_PORT || process.env.DB_PORT || 5432,
+      port: Number(process.env.TEST_DB_PORT || process.env.DB_PORT) || 5432,
     },
     migrations: {
       directory: './src/db/migrations',

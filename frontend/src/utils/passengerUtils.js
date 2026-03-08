@@ -22,7 +22,7 @@ export function calcAge(dob, travelDate) {
  * @returns {string} error message, or '' if valid
  */
 export function validateAge(dob, category, travelDate) {
-  if (!dob) return ''
+  if (!dob) return 'Date of birth is required'
   const { years, totalMonths } = calcAge(dob, travelDate)
   if (category === 'ADULT' && years < 12) return 'Passenger age does not match the selected category. Adult must be 12+ years.'
   if (category === 'CHILD' && (years < 2 || years > 11)) return 'Passenger age does not match the selected category. Child must be 2–11 years.'

@@ -12,7 +12,7 @@
     "reset-db": "knex migrate:rollback --all --env development && knex migrate:latest --env development && knex seed:run --env development",
     "test:prepare-db": "node scripts/setupTestDb.js && cross-env NODE_ENV=test knex migrate:latest --env test && cross-env NODE_ENV=test knex seed:run --env test",
     "test": "npm run test:prepare-db && npm run test:unit && npm run test:integration && npm run test:e2e:api",
-    "test:unit": "vitest run --config vitest.unit.config.js",
+    "test:unit": "cross-env NODE_ENV=test vitest run --config vitest.unit.config.js",
     "test:integration": "cross-env NODE_ENV=test vitest run --config vitest.integration.config.js --maxWorkers=1",
     "test:integration:mocked": "cross-env NODE_ENV=test vitest run --config vitest.integration.config.js --maxWorkers=1 Mocked",
     "test:integration:realdb": "cross-env NODE_ENV=test vitest run --config vitest.integration.config.js --maxWorkers=1 RealDB",

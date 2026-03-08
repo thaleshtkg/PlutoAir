@@ -2,6 +2,7 @@ import { Booking, Passenger, BookingAddOn, Payment } from '../models/Booking.js'
 import { Flight } from '../models/Flight.js';
 import { httpResponses } from '../utils/responseFormat.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+import db from '../db/connection.js';
 
 export const bookingController = {
   createBooking: asyncHandler(async (req, res) => {
@@ -115,28 +116,31 @@ export const bookingController = {
     const existingAddons = await BookingAddOn.findByBookingId(bookingId);
     const existingAddOnTotal = existingAddons.reduce((sum, item) => sum + Number(item.total_price || 0), 0);
 
-    // Delete existing add-ons
-    await BookingAddOn.deleteByBookingId(bookingId);
+    // Wrap delete + insert + total update in a transaction so a mid-loop failure
+    // never leaves the booking in a partially-updated state.
+    const createdAddons = await db.transaction(async (trx) => {
+      await trx('booking_addons').where({ booking_id: bookingId }).delete();
 
-    // Add new add-ons
-    let totalAddOnCost = 0;
-    const createdAddons = [];
+      let totalAddOnCost = 0;
+      const inserted = [];
 
-    for (const addon of addons) {
-      const addonRecord = await BookingAddOn.create({
-        booking_id: bookingId,
-        ...addon,
-      });
-      totalAddOnCost += addon.total_price || 0;
-      createdAddons.push(addonRecord);
-    }
+      for (const addon of addons) {
+        const [addonRecord] = await trx('booking_addons')
+          .insert({ booking_id: bookingId, ...addon })
+          .returning('*');
+        totalAddOnCost += addon.total_price || 0;
+        inserted.push(addonRecord);
+      }
 
-    // Update booking total amount (base + add-ons + 18% GST).
-    const baseFare = Math.max(0, Number(booking.total_amount || 0) - existingAddOnTotal);
-    const subtotal = baseFare + totalAddOnCost;
-    const gst = Math.round(subtotal * 0.18);
-    const newTotal = subtotal + gst;
-    await Booking.updateTotalAmount(bookingId, newTotal);
+      // Update booking total amount (base + add-ons + 18% GST).
+      const baseFare = Math.max(0, Number(booking.total_amount || 0) - existingAddOnTotal);
+      const subtotal = baseFare + totalAddOnCost;
+      const gst = Math.round(subtotal * 0.18);
+      const newTotal = subtotal + gst;
+      await trx('bookings').where({ id: bookingId }).update({ total_amount: newTotal });
+
+      return inserted;
+    });
 
     return httpResponses.ok(res, { addons: createdAddons }, 'Add-ons updated successfully');
   }),
@@ -147,6 +151,10 @@ export const bookingController = {
     const booking = await Booking.findById(bookingId);
     if (!booking) {
       return httpResponses.notFound(res, 'Booking not found');
+    }
+
+    if (booking.user_id && booking.user_id !== req.user.id && !req.user.is_admin) {
+      return httpResponses.forbidden(res, 'Unauthorized access to this booking');
     }
 
     const passengers = await Passenger.findByBookingId(bookingId);
@@ -192,6 +200,10 @@ export const bookingController = {
     const booking = await Booking.findByRef(bookingRef);
     if (!booking) {
       return httpResponses.notFound(res, 'Booking not found');
+    }
+
+    if (booking.user_id && booking.user_id !== req.user.id && !req.user.is_admin) {
+      return httpResponses.forbidden(res, 'Unauthorized access to this booking');
     }
 
     const passengers = await Passenger.findByBookingId(booking.id);
