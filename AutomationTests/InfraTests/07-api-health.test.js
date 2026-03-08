@@ -10,7 +10,7 @@
 
 import http from 'http'
 import { describe, it, expect, beforeAll } from 'vitest'
-import { getBackendEnv, getFrontendEnv, parseViteConfig, isTcpPortOpen, httpGet, httpOptions } from './helpers.js'
+import { getBackendEnv, getFrontendEnv, parseViteConfig, isTcpPortOpen, httpGet, httpPost, httpOptions } from './helpers.js'
 
 const backendEnv = getBackendEnv()
 const frontendEnv = getFrontendEnv()
@@ -145,7 +145,9 @@ describe('API route availability', () => {
       if (!requireApi()) return
       // For routes that require auth, we send without a token — expecting 401/403/400/422
       // NOT 404, which would mean the route doesn't exist at all
-      const res = await httpGet(`${BACKEND_BASE}${route.path}`)
+      const res = route.method === 'POST'
+        ? await httpPost(`${BACKEND_BASE}${route.path}`)
+        : await httpGet(`${BACKEND_BASE}${route.path}`)
       expect(res.status, [
         `${route.method} ${route.path} returned 404 — the route is not registered.`,
         'This means the route was removed, renamed, or the app failed to start correctly.',
